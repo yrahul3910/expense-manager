@@ -24,8 +24,8 @@
         <GridPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="350.0" prefWidth="300.0"
                   BorderPane.alignment="CENTER">
             <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="163.0" minWidth="10.0" prefWidth="106.0"/>
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="233.0" minWidth="10.0" prefWidth="233.0"/>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="163.0" minWidth="10.0" prefWidth="74.0"/>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="233.0" minWidth="10.0" prefWidth="226.0"/>
             </columnConstraints>
             <rowConstraints>
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
@@ -51,19 +51,22 @@
                 <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="15.0" GridPane.columnIndex="1"
                       GridPane.rowIndex="4">
                     <children>
-                        <RadioButton mnemonicParsing="false" selected="true" text="Transactions">
+                        <RadioButton fx:id="rdbTransactions" mnemonicParsing="false"
+                                     onAction="#onTransactionsButtonSelected" selected="true" text="Transactions">
                             <toggleGroup>
                                 <ToggleGroup fx:id="tglAddTo"/>
                             </toggleGroup>
                         </RadioButton>
-                        <RadioButton mnemonicParsing="false" text="Budget" toggleGroup="$tglAddTo"/>
+                        <RadioButton fx:id="rdbBudget" mnemonicParsing="false" onAction="#onBudgetButtonSelected"
+                                     text="Budget" toggleGroup="$tglAddTo"/>
                     </children>
                 </HBox>
                 <ComboBox fx:id="cmbCategory" editable="true" prefWidth="200.0" GridPane.columnIndex="1"
                           GridPane.halignment="CENTER" GridPane.rowIndex="1"/>
                 <Label text="Notes" GridPane.halignment="RIGHT" GridPane.rowIndex="3"/>
-                <TextArea maxWidth="-Infinity" prefHeight="200.0" prefWidth="200.0" promptText="Add your notes"
-                          GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3"/>
+                <TextArea fx:id="txtNotes" maxWidth="-Infinity" prefHeight="200.0" prefWidth="200.0"
+                          promptText="Add your notes" GridPane.columnIndex="1" GridPane.halignment="CENTER"
+                          GridPane.rowIndex="3"/>
             </children>
         </GridPane>
     </center>
@@ -71,14 +74,35 @@
         <TitledPane animated="false" maxHeight="1.7976931348623157E308" text="Transactions">
             <content>
                 <AnchorPane maxHeight="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="180.0"
-                            prefWidth="200.0"/>
+                            prefWidth="200.0">
+                    <children>
+                        <TableView fx:id="transactionsView" maxHeight="-Infinity" minHeight="-Infinity"
+                                   prefHeight="323.0" prefWidth="200.0">
+                            <columns>
+                                <TableColumn fx:id="transactionsCategoryColumn" prefWidth="114.0" text="Category"/>
+                                <TableColumn fx:id="transactionsAmountColumn" prefWidth="83.0" text="Amount"/>
+                            </columns>
+                        </TableView>
+                    </children>
+                </AnchorPane>
             </content>
         </TitledPane>
     </left>
     <right>
         <TitledPane animated="false" maxHeight="1.7976931348623157E308" text="Budget" BorderPane.alignment="CENTER">
             <content>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0"/>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                    <children>
+                        <TableView fx:id="budgetView" prefHeight="323.0" prefWidth="200.0">
+                            <columns>
+                                <TableColumn fx:id="budgetCategoryColumn" editable="false" prefWidth="103.0"
+                                             text="Category"/>
+                                <TableColumn fx:id="budgetAmountColumn" editable="false" prefWidth="96.0"
+                                             text="Budget"/>
+                            </columns>
+                        </TableView>
+                    </children>
+                </AnchorPane>
             </content>
         </TitledPane>
     </right>
