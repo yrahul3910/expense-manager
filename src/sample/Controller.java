@@ -6,6 +6,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.Region;
 
 import java.net.URL;
 import java.util.*;
@@ -34,6 +35,14 @@ public class Controller implements Initializable {
     // for the transactions, you can have several of each.
     private Map<String, BudgetItem> budget = new HashMap<>();
     private List<TransactionItem> transactions = new ArrayList<>();
+    private Map<String, Double> transactionsMap = new HashMap<>();
+
+    /*
+    TODO:
+        * View --> Consolidated Transactions / Separate
+        * File --> Save, Open, Separator, Exit
+        * Help --> About
+     */
 
     private ObservableList<BudgetItem> getBudgetItems() {
         ObservableList<BudgetItem> items = FXCollections.observableArrayList(budget.values());
@@ -73,6 +82,9 @@ public class Controller implements Initializable {
                 if (amount < 0) {
                     Alert alert = new Alert(Alert.AlertType.ERROR, "Amount cannot be negative in budget",
                             ButtonType.OK);
+                    alert.setTitle("Error");
+                    alert.setHeaderText("Data error");
+                    alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
                     alert.showAndWait();
                     return;
                 }
@@ -94,20 +106,65 @@ public class Controller implements Initializable {
                 // Add a new entry
                 String type = cmbType.getValue();
 
+                if (type.equals("Income"))
+                    key = "Income";
+
                 // Sanity checks
                 if (type.equals("Expense") && amount > 0)
                     amount = -amount;
                 else if (type.equals("Income") && amount < 0) {
                     Alert alert = new Alert(Alert.AlertType.ERROR, "Income amount must be positive.",
                             ButtonType.OK);
+                    alert.setTitle("Error");
+                    alert.setHeaderText("Data error");
+                    alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+                    alert.showAndWait();
+                    return;
+                }
+                if (!budget.containsKey(key) && !type.equals("Income")) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Transaction category must be in budget.",
+                            ButtonType.OK);
+                    alert.setTitle("Error");
+                    alert.setHeaderText("Missing budget entry");
+                    alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
                     alert.showAndWait();
                     return;
                 }
 
                 TransactionItem item = new TransactionItem(type, key, amount, txtNotes.getText());
                 transactions.add(item);
-
                 transactionsView.getItems().add(item);
+
+                // Add to the map as well
+                if (transactionsMap.containsKey(key))
+                    transactionsMap.put(key, transactionsMap.get(key) + amount);
+                else
+                    transactionsMap.put(key, amount);
+
+                // Check if transaction total is near or above budget
+                if (!type.equals("Income")) {
+                    double categoryBudget = budget.get(key).getAmount();
+
+                    // We need to use a - because the transactions are in negative,
+                    // while the budget is a positive amount.
+                    if (-transactionsMap.get(key) / categoryBudget > 1.0) {
+                        Alert alert = new Alert(Alert.AlertType.WARNING,
+                                "Expenses for this category have exceeded its budget.",
+                                ButtonType.OK);
+                        alert.setTitle("Warning");
+                        alert.setHeaderText("Budget exceeded");
+                        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+                        alert.showAndWait();
+                    } else if (-transactionsMap.get(key) / categoryBudget > 0.9) {
+                        Alert alert = new Alert(Alert.AlertType.WARNING,
+                                "Expenses for this category are over 90% of its budget.",
+                                ButtonType.OK);
+                        alert.setTitle("Warning");
+                        alert.setHeaderText("Budget almost exceeded");
+                        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+                        alert.showAndWait();
+                    }
+                }
             }
 
             // Clear the inputs
@@ -117,6 +174,8 @@ public class Controller implements Initializable {
             txtNotes.clear();
         } catch (NumberFormatException err) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Invalid amount.", ButtonType.OK);
+            alert.setTitle("Error");
+            alert.setHeaderText("Data error");
             alert.showAndWait();
         }
     }
