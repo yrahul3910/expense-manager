@@ -7,9 +7,13 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Region;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
+import java.io.*;
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Controller implements Initializable {
     // UI elements
@@ -19,6 +23,7 @@ public class Controller implements Initializable {
     public Button btnAddEntry;
     public RadioButton rdbBudget, rdbTransactions;
     public TextArea txtNotes;
+    public MenuItem mnuSave, mnuOpen;
 
     // Right-anchored TableView and its columns
     public TableView<BudgetItem> budgetView;
@@ -69,6 +74,66 @@ public class Controller implements Initializable {
     public void onTransactionsButtonSelected(ActionEvent e) {
         cmbType.setDisable(false);
         txtNotes.setDisable(false);
+    }
+
+    public void onSaveMenuItemClicked(ActionEvent e) {
+        FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter extensionFilter =
+                new FileChooser.ExtensionFilter("Expense Manager Files (*.account)", "*.account");
+        fileChooser.getExtensionFilters().add(extensionFilter);
+
+        Stage currentStage = (Stage) btnAddEntry.getScene().getWindow();
+        File file = fileChooser.showSaveDialog(currentStage);
+
+        if (file != null) {
+            Accounts accounts = new Accounts(budget, transactions);
+
+            // Hack because the Save dialog doesn't create a file with the extension
+            if (!file.getName().endsWith(".account"))
+                file = new File(file.getAbsolutePath() + ".account");
+
+            try {
+                FileOutputStream fos = new FileOutputStream(file);
+                ObjectOutputStream oos = new ObjectOutputStream(fos);
+                oos.writeObject(accounts);
+            } catch (IOException err) {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Could not open file.", ButtonType.OK);
+                alert.setTitle("Error");
+                alert.setHeaderText("Save failed");
+                alert.showAndWait();
+            }
+        }
+    }
+
+    public void onOpenMenuItemClicked(ActionEvent e) {
+        FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter extensionFilter =
+                new FileChooser.ExtensionFilter("Expense Manager Files (*.account)", "*.account");
+        fileChooser.getExtensionFilters().add(extensionFilter);
+
+        Stage currentStage = (Stage) btnAddEntry.getScene().getWindow();
+        File file = fileChooser.showOpenDialog(currentStage);
+
+        if (file != null) {
+            try {
+                FileInputStream fis = new FileInputStream(file);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                Accounts accounts = (Accounts) ois.readObject();
+
+                budget = accounts.getBudget();
+                transactions = accounts.getTransactions();
+                transactionsMap = transactions.stream().collect(
+                        Collectors.toMap(TransactionItem::getCategory, TransactionItem::getAmount));
+
+                budgetView.setItems(getBudgetItems());
+                transactionsView.setItems(getTransactionItems());
+            } catch (IOException | ClassNotFoundException err) {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Could not open file.", ButtonType.OK);
+                alert.setTitle("Error");
+                alert.setHeaderText("Open failed");
+                alert.showAndWait();
+            }
+        }
     }
 
     public void onAddEntryClicked(ActionEvent e) {
